@@ -28,7 +28,7 @@ exports.readAll = (callback) => {
   var todoList = [];
   fs.readdir(exports.dataDir, (err, files) => {
     if (err) {
-      throw('[ERROR] cannot read directory');
+      throw ('[ERROR] cannot read directory');
     } else {
       for (var i = 0; i < files.length; i++) {
         var todo = {
@@ -43,12 +43,15 @@ exports.readAll = (callback) => {
 };
 
 exports.readOne = (id, callback) => {
-  var text = items[id];
-  if (!text) {
-    callback(new Error(`No item with id: ${id}`));
-  } else {
-    callback(null, { id, text });
-  }
+  var filePath = path.join(exports.dataDir, (id + '.txt'));
+  fs.readFile(filePath, 'latin1', (err, data) => {
+    var fileInfo = {id: id, text: data};
+    if (err) {
+      callback(err, fileInfo);
+    } else {
+      callback(null, fileInfo);
+    }
+  });
 };
 
 exports.update = (id, text, callback) => {
