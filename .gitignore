@@ -38,3 +38,6 @@ node_modules
 .floobit
 .floo
 .flooignore
+
+# VSCODE SETTINGS
+.vscode/
