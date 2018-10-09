@@ -2,6 +2,7 @@ const fs = require('fs');
 const path = require('path');
 const _ = require('underscore');
 const counter = require('./counter');
+const Promise = require('bluebird');
 
 var items = {};
 
@@ -24,24 +25,6 @@ exports.create = (text, callback) => {
   });
 };
 
-exports.readAll = (callback) => {
-  var todoList = [];
-  fs.readdir(exports.dataDir, (err, files) => {
-    if (err) {
-      throw ('[ERROR] cannot read directory');
-    } else {
-      for (var i = 0; i < files.length; i++) {
-        var todo = {
-          id: files[i].slice(0, files[i].length - 4),
-          text: files[i].slice(0, files[i].length - 4)
-        };
-        todoList.push(todo);
-      }
-      callback(null, todoList);
-    }
-  });
-};
-
 exports.readOne = (id, callback) => {
   var filePath = path.join(exports.dataDir, (id + '.txt'));
   fs.readFile(filePath, 'latin1', (err, data) => {
@@ -51,6 +34,26 @@ exports.readOne = (id, callback) => {
     } else {
       callback(null, fileInfo);
     }
+  });
+};
+
+var readOneAsync = Promise.promisify(exports.readOne);
+
+exports.readAll = (callback) => {
+  var todoList = [];
+  fs.readdir(exports.dataDir, (err, files) => {
+    Promise.all(files.map(function(file) {
+      return readOneAsync(file.slice(0, file.length - 4));
+    }))
+      .then((files) => {
+        files.forEach((file) => {
+          todoList.push({
+            id: file.id,
+            text: file.text
+          });
+        });
+        callback(null, todoList);
+      });
   });
 };
 
